@@ -2,6 +2,7 @@
 #include <string.h>
 #include <regex.h>
 #include <stdlib.h>
+#define TOKEN_MAX_SIZE 25
 
 enum TokenType {
     IDENTIFIER,
@@ -13,7 +14,7 @@ enum TokenType {
 
 typedef struct {
     enum TokenType type;
-    char token[20];
+    char token[TOKEN_MAX_SIZE];
 } Token;
 
 int check_pattern(char c, char* pattern) {
@@ -88,7 +89,7 @@ enum TokenType get_type(char *str) {
 Token* lexer_get_tokens(char* source, int* num_tokens) {
     Token* tokens = malloc(sizeof(Token) * 20); // TODO realloc if needed
     int token_num = 0;
-    char buffer[20] = "";
+    char buffer[TOKEN_MAX_SIZE] = "";
     int buffer_index = 0;
 
     if(tokens == NULL) {
