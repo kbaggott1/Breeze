@@ -51,7 +51,7 @@ def main():
     
     for file in os.listdir(source_dir):
         if ".c" in file:
-            source_files[file.replace(".c", ".h")] = os.getcwd() + "/source/" + file
+            source_files[file.replace(".c", ".h")] = os.getcwd() + "/source/" + file # TODO use source_dir instead of hard coding
     
     for file_name, file_path in source_files.items():
         with open(file_path) as file:
