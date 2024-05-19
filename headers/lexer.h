@@ -1,5 +1,6 @@
 #ifndef LEXER_H
 #define LEXER_H
+#define TOKEN_MAX_SIZE 25
 
 enum TokenType {
     IDENTIFIER,
@@ -11,7 +12,7 @@ enum TokenType {
 
 typedef struct {
     enum TokenType type;
-    char token[20];
+    char token[TOKEN_MAX_SIZE];
 } Token;
 
 Token* lexer_get_tokens(char* source, int* num_tokens);
