@@ -47,8 +47,18 @@ int is_whitespace(char c) {
     return check_pattern(c, pattern);
 }
 
+int is_const(char* str) {
+    return strcmp(str, "const") == 0;
+}
+
 int is_keyword(char* str) {
-    const char* keywords[] = {"int", "float", "char", "double"};
+    const char* keywords[] = {
+        "int", 
+        "float", 
+        "char", 
+        "double"
+    };
+
     int num_keywords = sizeof(keywords) / sizeof(keywords[0]);
 
     for(int i = 0; i < num_keywords; i++) {
@@ -68,6 +78,9 @@ enum TokenType get_type(char *str) {
     }
     if(is_special_char(str[0])) {
         return SPECIAL;
+    }
+    if(is_const(str)) {
+        return CONST;
     }
     return IDENTIFIER;
 } 
