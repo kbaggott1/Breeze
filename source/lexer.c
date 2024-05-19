@@ -73,7 +73,7 @@ enum TokenType get_type(char *str) {
 } 
 
 Token* lexer_get_tokens(char* source, int* num_tokens) {
-    Token* tokens = malloc(sizeof(Token) * 20); // Initial size, can be adjusted
+    Token* tokens = malloc(sizeof(Token) * 20); // TODO realloc if needed
     int token_num = 0;
     char buffer[20] = "";
     int buffer_index = 0;
