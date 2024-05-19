@@ -7,7 +7,7 @@ int main(int argc, char** argv) {
     int num_tokens;
 
     Token* tokens = lexer_get_tokens(source, &num_tokens);
-    lexer_print_tokens(tokens, num_tokens);
+    lexer_print_tokens(tokens, num_tokens); // This should be called if compiler is called with --verbose
     
     return 0;
 }
