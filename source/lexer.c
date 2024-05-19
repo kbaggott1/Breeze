@@ -2,9 +2,9 @@
 #include <string.h>
 #include <regex.h>
 #include <stdlib.h>
-#define TOKEN_MAX_SIZE 25
+#define TOKEN_MAX_SIZE 25 //!expose
 
-enum TokenType {
+enum TokenType { //!expose
     IDENTIFIER,
     KEYWORD,
     OPERATOR,
@@ -12,7 +12,7 @@ enum TokenType {
     SPECIAL
 };
 
-typedef struct {
+typedef struct { //!expose
     enum TokenType type;
     char token[TOKEN_MAX_SIZE];
 } Token;
@@ -86,7 +86,7 @@ enum TokenType get_type(char *str) {
     return IDENTIFIER;
 } 
 
-Token* lexer_get_tokens(char* source, int* num_tokens) {
+Token* lexer_get_tokens(char* source, int* num_tokens) { //!expose
     Token* tokens = malloc(sizeof(Token) * 20); // TODO realloc if needed
     int token_num = 0;
     char buffer[TOKEN_MAX_SIZE] = "";
@@ -159,7 +159,7 @@ char* TokenTypeToString(enum TokenType type) {
     }
 }
 
-void lexer_print_tokens(Token* tokens, int num_tokens) {
+void lexer_print_tokens(Token* tokens, int num_tokens) { //!expose
     printf("%-10s %-20s %-10s\n", "Index", "Token", "Type");
     printf("---------------------------------------------------\n");
     for (int i = 0; i < num_tokens; i++) {
