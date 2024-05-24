@@ -37,6 +37,23 @@ def build_header(lines: list[str], file_name: str) -> list[str]:
 
     return headers
 
+def get_headers(source_files: dict) -> dict:
+    header_files = {}
+    for file_name, file_path in source_files.items():
+        file_name = file_name.replace(".c", ".h")
+        with open(file_path) as file:
+            lines = file.readlines()
+            header = build_header(lines, file_name)
+            if len(header) > 0:
+                header_files[file_name] = header
+    
+    return header_files
+
+def write_headers_to_dest(destintation_path: str, header_files: dict):
+    for file_name, header_content in header_files.items():
+        with open(destintation_path + "/" + file_name, "w") as file:
+            file.writelines(header_content)
+
 def main():
     source_files = {}
     header_files = {}
@@ -51,16 +68,15 @@ def main():
     
     for file in os.listdir(source_dir):
         if ".c" in file:
-            source_files[file.replace(".c", ".h")] = os.getcwd() + "/source/" + file # TODO use source_dir instead of hard coding
+            source_files[file] = os.getcwd() + "/" + source_dir + "/" + file
     
-    for file_name, file_path in source_files.items():
-        with open(file_path) as file:
-            lines = file.readlines()
-            header = build_header(lines, file_name)
-            if len(header) > 0:
-                header_files[file_name] = header
-
-        # TODO clean and write headers dir
+    header_files = get_headers(source_files)
+    
+    for file in os.listdir(destination_dir):
+        if ".h" in file:
+            os.remove(destination_dir+"/"+file)
+    
+    write_headers_to_dest(destination_dir, header_files)
 
 
 if __name__ == "__main__":
