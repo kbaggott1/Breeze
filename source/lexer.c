@@ -155,7 +155,7 @@ Token* realloc_tokens_list(Token* tokens, int* tokens_size) {
 
 Token* lexer_get_tokens(char* source, int* num_tokens) { //!expose
     int tokens_size = INITIAL_TOKENS_SIZE;
-    Token* tokens = malloc(sizeof(Token) * tokens_size); // TODO realloc if needed
+    Token* tokens = malloc(sizeof(Token) * tokens_size);
     int token_num = 0;
     char buffer[TOKEN_BUFFER_SIZE];
     int buffer_index = 0;
