@@ -15,6 +15,7 @@ enum TokenType { //!expose
     INTEGER_LITERAL,
     FLOAT_LITERAL,
     STRING_LITERAL
+    // TODO Add comment type
 };
 
 typedef struct { //!expose

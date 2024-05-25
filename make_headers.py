@@ -15,6 +15,8 @@ def build_header(lines: list[str], file_name: str) -> list[str]:
     header_name = file_name.upper()
     header_name = header_name.replace('.', '_')
 
+    # TODO Ignore comments in structs unions and enums
+    
     for line in lines:
         if len(stack) > 0:
             if "{" in line:
