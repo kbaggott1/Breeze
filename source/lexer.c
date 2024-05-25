@@ -189,7 +189,7 @@ Token* lexer_get_tokens(char* source, int* num_tokens) { //!expose
                 tokens = realloc_tokens_list(tokens, &tokens_size);
             }
             operator_buffer[0] = c;
-            tokens[token_num++] = create_token(operator_buffer, 2);
+            tokens[token_num++] = create_token(operator_buffer, 1);
         } else {
             buffer[buffer_index++] = c;
         }
