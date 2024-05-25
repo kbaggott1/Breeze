@@ -2,8 +2,14 @@
 #include <stdlib.h>
 #include "lexer.h"
 
+
+char* get_file_contents() {
+    return "";
+}
+
 int main(int argc, char** argv) {
     char* source = "my_num: int = 10  - 5.3; const lol = \"test\"\0";
+
     int num_tokens;
 
     Token* tokens = lexer_get_tokens(source, &num_tokens);

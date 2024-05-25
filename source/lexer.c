@@ -20,24 +20,6 @@ typedef struct { //!expose
     char token[TOKEN_BUFFER_SIZE];
 } Token;
 
-char* get_pattern(enum TokenType tok) {
-    switch (tok)
-    {
-        case SPECIAL:    
-            return "^[:;]$";
-        case OPERATOR:
-            return "^[+=*/-]$";
-        case INTEGER_LITERAL:
-            return "^[0-9]+$";
-        case FLOAT_LITERAL:
-            return "^[0-9]+\\.[0-9]+$";
-        case STRING_LITERAL:
-            return "^\"([^\"\\\\]|\\\\.)*\"$";;
-        default:
-            return "";
-    }
-}
-
 int check_pattern(char c, char* pattern) {
     regex_t regex;
     int reti;
