@@ -4,6 +4,8 @@
 #include <stdlib.h>
 #define TOKEN_BUFFER_SIZE 25 //!expose
 #define INITIAL_TOKENS_SIZE 20
+
+
 enum TokenType { //!expose
     IDENTIFIER,
     KEYWORD,
@@ -203,7 +205,7 @@ Token* lexer_get_tokens(char* source, int* num_tokens) { //!expose
     return tokens;
 }
 
-char* TokenTypeToString(enum TokenType type) {
+char* token_type_to_string(enum TokenType type) {
     switch(type) {
         case IDENTIFIER:
             return "IDENTIFIER";
@@ -230,7 +232,7 @@ void lexer_print_tokens(Token* tokens, int num_tokens) { //!expose
     printf("%-10s %-20s %-10s\n", "Index", "Token", "Type");
     printf("---------------------------------------------------\n");
     for (int i = 0; i < num_tokens; i++) {
-        const char* type = TokenTypeToString(tokens[i].type);
+        const char* type = token_type_to_string(tokens[i].type);
         printf("%-10d %-20s %-10s\n", i, tokens[i].token, type);
     }
 }
