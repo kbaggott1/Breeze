@@ -3,7 +3,7 @@
 #include "lexer.h"
 
 int main(int argc, char** argv) {
-    char* source = "my_num: int = 10 - 5 const\0";
+    char* source = "my_num: int = 10  - 5.3; const lol = \"test\"\0";
     int num_tokens;
 
     Token* tokens = lexer_get_tokens(source, &num_tokens);

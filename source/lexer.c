@@ -2,20 +2,41 @@
 #include <string.h>
 #include <regex.h>
 #include <stdlib.h>
-#define TOKEN_MAX_SIZE 25 //!expose
-
+#define TOKEN_BUFFER_SIZE 25 //!expose
+#define INITIAL_TOKENS_SIZE 20
 enum TokenType { //!expose
     IDENTIFIER,
     KEYWORD,
     OPERATOR,
     CONST,
-    SPECIAL
+    SPECIAL,
+    INTEGER_LITERAL,
+    FLOAT_LITERAL,
+    STRING_LITERAL
 };
 
 typedef struct { //!expose
     enum TokenType type;
-    char token[TOKEN_MAX_SIZE];
+    char token[TOKEN_BUFFER_SIZE];
 } Token;
+
+char* get_pattern(enum TokenType tok) {
+    switch (tok)
+    {
+        case SPECIAL:    
+            return "^[:;]$";
+        case OPERATOR:
+            return "^[+=*/-]$";
+        case INTEGER_LITERAL:
+            return "^[0-9]+$";
+        case FLOAT_LITERAL:
+            return "^[0-9]+\\.[0-9]+$";
+        case STRING_LITERAL:
+            return "^\"([^\"\\\\]|\\\\.)*\"$";;
+        default:
+            return "";
+    }
+}
 
 int check_pattern(char c, char* pattern) {
     regex_t regex;
@@ -32,6 +53,22 @@ int check_pattern(char c, char* pattern) {
     regfree(&regex);
     return !reti;
 }
+
+int check_pattern_s(char* str, char* pattern) {
+    regex_t regex;
+    int reti;
+
+    reti = regcomp(&regex, pattern, REG_EXTENDED);
+    if (reti) {
+        fprintf(stderr, "Could not compile regex\n");
+        exit(1);
+    }
+
+    reti = regexec(&regex, str, 0, NULL, 0);
+    regfree(&regex);
+    return !reti;
+}
+
 
 int is_special_char(char c) {
     char* pattern = "^[:;]$";
@@ -52,12 +89,26 @@ int is_const(char* str) {
     return strcmp(str, "const") == 0;
 }
 
+int is_string_literal(char* str) {
+    char* pattern = "^\"([^\"\\\\]|\\\\.)*\"$";
+    return check_pattern_s(str, pattern);
+}
+
+int is_integer(char* str) {
+    char* pattern = "^[0-9]+$";
+    return check_pattern_s(str, pattern);
+}
+
+int is_float(char* str) {
+    char* pattern = "^[0-9]+\\.[0-9]+$";
+    return check_pattern_s(str, pattern);
+}
+
 int is_keyword(char* str) {
     const char* keywords[] = {
         "int", 
         "float", 
-        "char", 
-        "double"
+        "str"
     };
 
     int num_keywords = sizeof(keywords) / sizeof(keywords[0]);
@@ -83,14 +134,47 @@ enum TokenType get_type(char *str) {
     if(is_const(str)) {
         return CONST;
     }
+    if(is_string_literal(str)) {
+        return STRING_LITERAL;
+    }
+    if(is_integer(str)) {
+        return INTEGER_LITERAL;
+    }
+    if(is_float(str)) {
+        return FLOAT_LITERAL;
+    }
     return IDENTIFIER;
 } 
 
+Token create_token(char* buffer, int buffer_index) {
+    buffer[buffer_index] = '\0';
+    Token new_token;
+    new_token.type = get_type(buffer);
+    strcpy(new_token.token, buffer);
+    return new_token;
+}
+
+Token* realloc_tokens_list(Token* tokens, int* tokens_size) {
+    *tokens_size *= 2;
+    Token* temp_tokens = realloc(tokens, (*tokens_size) * sizeof(Token));
+
+    if (temp_tokens == NULL) {
+        free(tokens);
+        fprintf(stderr, "Error: Unable to reallocate memory for tokens list.\n");
+        exit(1);
+    }
+    
+    tokens = temp_tokens;
+    return tokens;
+}
+
 Token* lexer_get_tokens(char* source, int* num_tokens) { //!expose
-    Token* tokens = malloc(sizeof(Token) * 20); // TODO realloc if needed
+    int tokens_size = INITIAL_TOKENS_SIZE;
+    Token* tokens = malloc(sizeof(Token) * tokens_size); // TODO realloc if needed
     int token_num = 0;
-    char buffer[TOKEN_MAX_SIZE] = "";
+    char buffer[TOKEN_BUFFER_SIZE];
     int buffer_index = 0;
+    char operator_buffer[2];
 
     if(tokens == NULL) {
         return NULL;
@@ -101,41 +185,36 @@ Token* lexer_get_tokens(char* source, int* num_tokens) { //!expose
 
         if(is_whitespace(c)) {
             if(buffer_index > 0) {
-                buffer[buffer_index] = '\0';
-                Token new_token;
-                new_token.type = get_type(buffer);
-                strcpy(new_token.token, buffer);
-                tokens[token_num++] = new_token;
+                if(token_num + 1 > tokens_size) {
+                    tokens = realloc_tokens_list(tokens, &tokens_size);
+                }
+                tokens[token_num++] = create_token(buffer, buffer_index);
                 buffer_index = 0;
             }
         } 
         else if(is_operator(c) || is_special_char(c)) {
             if(buffer_index > 0) {
-                buffer[buffer_index] = '\0';
-                Token new_token;
-                new_token.type = get_type(buffer);
-                strcpy(new_token.token, buffer);
-                tokens[token_num++] = new_token;
+                if(token_num + 1 > tokens_size) {
+                    tokens = realloc_tokens_list(tokens, &tokens_size);
+                }
+                tokens[token_num++] = create_token(buffer, buffer_index);
                 buffer_index = 0;
             }
-
-            Token new_token;
-            char temp[2] = {c, '\0'};
-            new_token.type = get_type(temp);
-            new_token.token[0] = c;
-            new_token.token[1] = '\0';
-            tokens[token_num++] = new_token;
+            if(token_num + 1 > tokens_size) {
+                tokens = realloc_tokens_list(tokens, &tokens_size);
+            }
+            operator_buffer[0] = c;
+            tokens[token_num++] = create_token(operator_buffer, 2);
         } else {
             buffer[buffer_index++] = c;
         }
     }
 
     if(buffer_index > 0) {
-        buffer[buffer_index] = '\0';
-        Token new_token;
-        new_token.type = get_type(buffer);
-        strcpy(new_token.token, buffer);
-        tokens[token_num++] = new_token;
+        if(token_num + 1 > tokens_size) {
+            tokens = realloc_tokens_list(tokens, &tokens_size);
+        }
+        tokens[token_num++] = create_token(buffer, buffer_index);
     }
 
     *num_tokens = token_num;
@@ -144,16 +223,22 @@ Token* lexer_get_tokens(char* source, int* num_tokens) { //!expose
 
 char* TokenTypeToString(enum TokenType type) {
     switch(type) {
-        case 0:
+        case IDENTIFIER:
             return "IDENTIFIER";
-        case 1:
+        case KEYWORD:
             return "KEYWORD";
-        case 2:
+        case OPERATOR:
             return "OPERATOR";
-        case 3:
+        case CONST:
             return "CONST";
-        case 4:
+        case SPECIAL:
             return "SPECIAL";
+        case STRING_LITERAL:
+            return "STRING_LITERAL";
+        case INTEGER_LITERAL:
+            return "INTEGER_LITERAL";
+        case FLOAT_LITERAL:
+            return "FLOAT_LITERAL";
         default:
             return "ERROR";
     }
