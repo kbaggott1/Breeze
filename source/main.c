@@ -32,15 +32,16 @@ int main(int argc, char** argv) {
         handle_arg(argv[i]);
     }
 
-    char* source = "my_num: int = 10  - 5.3; const some_text = \"test\"\0";
+    char* source = "my_num: int = 10 - 5.3 # testing comment removal\nconst some_text = \"test\"\0";
+    char* TEMP_PLEASE_REMOVE_EVENTUALLY = strdup(source); // TODO remove this when source code removed from file
 
-    int num_tokens;
 
-    Token* tokens = lexer_get_tokens(source, &num_tokens);
+    TokenList token_list = lexer_get_tokens(TEMP_PLEASE_REMOVE_EVENTUALLY);
     if(debug) {
-        lexer_print_tokens(tokens, num_tokens);
+        lexer_print_tokens(token_list);
     }
     
-    
+    free(token_list.tokens);
+    free(TEMP_PLEASE_REMOVE_EVENTUALLY);
     return 0;
 }

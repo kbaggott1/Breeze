@@ -18,8 +18,14 @@ typedef struct {
     char token[TOKEN_BUFFER_SIZE];
 } Token;
 
-Token* lexer_get_tokens(char* source, int* num_tokens); 
+typedef struct { 
+    Token* tokens;
+    int size;
+    int count;
+}  TokenList;
 
-void lexer_print_tokens(Token* tokens, int num_tokens); 
+TokenList lexer_get_tokens(char* source); 
+
+void lexer_print_tokens(TokenList token_list); 
 
 #endif

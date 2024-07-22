@@ -15,7 +15,6 @@ enum TokenType { //!expose
     INTEGER_LITERAL,
     FLOAT_LITERAL,
     STRING_LITERAL
-    // TODO Add comment type
 };
 
 typedef struct { //!expose
@@ -23,7 +22,38 @@ typedef struct { //!expose
     char token[TOKEN_BUFFER_SIZE];
 } Token;
 
-int check_pattern(char c, char* pattern) {
+typedef struct { //!expose
+    Token* tokens;
+    int size;
+    int count;
+}  TokenList;
+
+// Function prototypes
+// TODO Add const where applicable
+int check_pattern(char c, const char* pattern);
+int check_pattern_s(char* str, const char* pattern);
+int is_special_char(char c);
+int is_operator(char c);
+int is_whitespace(char c);
+int is_const(char* str);
+int is_string_literal(char* str);
+int is_integer(char* str);
+int is_float(char* str);
+int is_keyword(char* str);
+enum TokenType get_type(char* str);
+TokenList create_token_list();
+Token create_token(char* buffer, int buffer_index);
+void realloc_tokens_list(TokenList* token_list);
+TokenList tokenize_line(char* line);
+char* strip_comment(char* line);
+void extend_token_list(TokenList* token_list, TokenList new_token_list);
+TokenList lexer_get_tokens(char* source); //!expose
+char* token_type_to_string(enum TokenType type);
+void lexer_print_tokens(TokenList token_list); //!expose
+
+
+int check_pattern(char c, const char* pattern) {
+    // TODO Compiling regex patterns every time you check a character or string is inefficient. Compile the regex patterns once and reuse them.
     regex_t regex;
     int reti;
 
@@ -39,7 +69,8 @@ int check_pattern(char c, char* pattern) {
     return !reti;
 }
 
-int check_pattern_s(char* str, char* pattern) {
+int check_pattern_s(char* str, const char* pattern) {
+    // TODOD Compiling regex patterns every time you check a character or string is inefficient. Compile the regex patterns once and reuse them.
     regex_t regex;
     int reti;
 
@@ -56,7 +87,7 @@ int check_pattern_s(char* str, char* pattern) {
 
 
 int is_special_char(char c) {
-    char* pattern = "^[:;]$";
+    char* pattern = "^[:]$";
     return check_pattern(c, pattern);
 }
 
@@ -93,7 +124,8 @@ int is_keyword(char* str) {
     const char* keywords[] = {
         "int", 
         "float", 
-        "str"
+        "str",
+        "bool"
     };
 
     int num_keywords = sizeof(keywords) / sizeof(keywords[0]);
@@ -131,6 +163,15 @@ enum TokenType get_type(char *str) {
     return IDENTIFIER;
 } 
 
+TokenList create_token_list() {
+    TokenList token_list;
+    token_list.count = 0;
+    token_list.size = INITIAL_TOKENS_SIZE;
+    token_list.tokens = malloc(sizeof(Token) * INITIAL_TOKENS_SIZE);
+
+    return token_list;
+}
+
 Token create_token(char* buffer, int buffer_index) {
     buffer[buffer_index] = '\0';
     Token new_token;
@@ -139,71 +180,115 @@ Token create_token(char* buffer, int buffer_index) {
     return new_token;
 }
 
-Token* realloc_tokens_list(Token* tokens, int* tokens_size) {
-    *tokens_size *= 2;
-    Token* temp_tokens = realloc(tokens, (*tokens_size) * sizeof(Token));
+void realloc_tokens_list(TokenList* token_list) {
+    token_list->size *= 2;
+    Token* temp_tokens = realloc(token_list->tokens, (token_list->size) * sizeof(Token));
 
     if (temp_tokens == NULL) {
-        free(tokens);
+        free(token_list->tokens);
         fprintf(stderr, "Error: Unable to reallocate memory for tokens list.\n");
         exit(1);
     }
     
-    tokens = temp_tokens;
-    return tokens;
+    token_list->tokens = temp_tokens;
 }
 
-Token* lexer_get_tokens(char* source, int* num_tokens) { //!expose
-    int tokens_size = INITIAL_TOKENS_SIZE;
-    Token* tokens = malloc(sizeof(Token) * tokens_size);
-    int token_num = 0;
+
+
+TokenList tokenize_line(char* line) {
+    TokenList tok_list = create_token_list();
+
     char buffer[TOKEN_BUFFER_SIZE];
     int buffer_index = 0;
     char operator_buffer[2];
 
-    if(tokens == NULL) {
-        return NULL;
+    if(tok_list.tokens == NULL) {
+        return tok_list;
     }
 
-    for(int i = 0; i < strlen(source); i++) {
-        char c = source[i];
+    for(int i = 0; i < strlen(line); i++) {
+        char c = line[i];
 
         if(is_whitespace(c)) {
             if(buffer_index > 0) {
-                if(token_num + 1 > tokens_size) {
-                    tokens = realloc_tokens_list(tokens, &tokens_size);
+                if(tok_list.count + 1 > tok_list.size) {
+                    realloc_tokens_list(&tok_list);
                 }
-                tokens[token_num++] = create_token(buffer, buffer_index);
+                tok_list.tokens[tok_list.count++] = create_token(buffer, buffer_index);
                 buffer_index = 0;
             }
         } 
         else if(is_operator(c) || is_special_char(c)) {
             if(buffer_index > 0) {
-                if(token_num + 1 > tokens_size) {
-                    tokens = realloc_tokens_list(tokens, &tokens_size);
+                if(tok_list.count + 1 > tok_list.size) {
+                    realloc_tokens_list(&tok_list);
                 }
-                tokens[token_num++] = create_token(buffer, buffer_index);
+                tok_list.tokens[tok_list.count++] = create_token(buffer, buffer_index);
                 buffer_index = 0;
             }
-            if(token_num + 1 > tokens_size) {
-                tokens = realloc_tokens_list(tokens, &tokens_size);
+            if(tok_list.count + 1 > tok_list.size) {
+                realloc_tokens_list(&tok_list);
             }
             operator_buffer[0] = c;
-            tokens[token_num++] = create_token(operator_buffer, 1);
+            tok_list.tokens[tok_list.count++] = create_token(operator_buffer, 1);
         } else {
+            if(buffer_index >= TOKEN_BUFFER_SIZE - 1) {
+                fprintf(stderr, "Error: Token buffer overflow.\n");
+                exit(1);
+            }
             buffer[buffer_index++] = c;
         }
     }
 
     if(buffer_index > 0) {
-        if(token_num + 1 > tokens_size) {
-            tokens = realloc_tokens_list(tokens, &tokens_size);
+        if(tok_list.count + 1 > tok_list.size) {
+            realloc_tokens_list(&tok_list);
         }
-        tokens[token_num++] = create_token(buffer, buffer_index);
+        tok_list.tokens[tok_list.count++] = create_token(buffer, buffer_index);
     }
 
-    *num_tokens = token_num;
-    return tokens;
+    return tok_list;
+}
+
+char* strip_comment(char* line) {
+    char* comment = strchr(line, '#');
+
+    if(comment != NULL ){
+        line[comment - line] = '\0';
+    }
+
+    return line;
+}
+
+void extend_token_list(TokenList* token_list, TokenList new_token_list) {
+    int new_count = token_list->count + new_token_list.count;
+
+    while(new_count > token_list->size) {
+        realloc_tokens_list(token_list);
+    }
+
+    for(int i = token_list->count; i < new_count; i++) {
+        token_list->tokens[i] = new_token_list.tokens[i - token_list->count];
+    }
+    
+    token_list->count = new_count;
+    free(new_token_list.tokens);
+}
+
+TokenList lexer_get_tokens(char* source) {
+    TokenList token_list = create_token_list();
+
+    char* line = strtok(source, "\n");
+
+    while(line != NULL) {
+        line = strip_comment(line);
+
+        extend_token_list(&token_list, tokenize_line(line));
+
+        line = strtok(NULL, "\n");
+    }
+
+    return token_list;
 }
 
 char* token_type_to_string(enum TokenType type) {
@@ -229,11 +314,17 @@ char* token_type_to_string(enum TokenType type) {
     }
 }
 
-void lexer_print_tokens(Token* tokens, int num_tokens) { //!expose
+void lexer_print_tokens(TokenList token_list) {
     printf("%-10s %-20s %-10s\n", "Index", "Token", "Type");
     printf("---------------------------------------------------\n");
-    for (int i = 0; i < num_tokens; i++) {
-        const char* type = token_type_to_string(tokens[i].type);
-        printf("%-10d %-20s %-10s\n", i, tokens[i].token, type);
+
+    if(token_list.count == 0) {
+        printf("No Tokens Found...\n");
+    }
+    else {
+        for (int i = 0; i < token_list.count; i++) {
+            const char* type = token_type_to_string(token_list.tokens[i].type);
+            printf("%-10d %-20s %-10s\n", i, token_list.tokens[i].token, type);
+        }
     }
 }
