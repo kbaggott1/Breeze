@@ -2,9 +2,11 @@ import os
 import sys
 
 EXPOSE_STR = "//!expose"
+EXTERN_STR = "//!extern"
 
 def clean_line(line: str) -> str:
     line = line.replace(EXPOSE_STR, '')
+    line = line.replace(EXTERN_STR, '')
     line = line.replace(" {", ';')
     return line
 
@@ -30,7 +32,10 @@ def build_header(lines: list[str], file_name: str) -> list[str]:
                 headers.append(line.replace(EXPOSE_STR, ''))
                 stack.append("{")
             else:
-                headers.append(clean_line(line) + "\n")
+                headers.append(f"{clean_line(line)}\n")
+        
+        if EXTERN_STR in line:
+            headers.append(f"extern {clean_line(line)}\n")
 
     if len(headers) > 0:
         headers.insert(0, f"#ifndef {header_name}\n")

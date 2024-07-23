@@ -2,6 +2,7 @@
 #include <string.h>
 #include <regex.h>
 #include <stdlib.h>
+#include "globals.h"
 #define TOKEN_BUFFER_SIZE 25 //!expose
 #define INITIAL_TOKENS_SIZE 20
 
@@ -29,7 +30,6 @@ typedef struct { //!expose
 }  TokenList;
 
 // Function prototypes
-// TODO Add const where applicable
 int check_pattern(char c, const char* pattern);
 int check_pattern_s(char* str, const char* pattern);
 int is_special_char(char c);
@@ -51,9 +51,7 @@ TokenList lexer_get_tokens(char* source); //!expose
 char* token_type_to_string(enum TokenType type);
 void lexer_print_tokens(TokenList token_list); //!expose
 
-
 int check_pattern(char c, const char* pattern) {
-    // TODO Compiling regex patterns every time you check a character or string is inefficient. Compile the regex patterns once and reuse them.
     regex_t regex;
     int reti;
 
@@ -70,7 +68,6 @@ int check_pattern(char c, const char* pattern) {
 }
 
 int check_pattern_s(char* str, const char* pattern) {
-    // TODOD Compiling regex patterns every time you check a character or string is inefficient. Compile the regex patterns once and reuse them.
     regex_t regex;
     int reti;
 
@@ -193,8 +190,6 @@ void realloc_tokens_list(TokenList* token_list) {
     token_list->tokens = temp_tokens;
 }
 
-
-
 TokenList tokenize_line(char* line) {
     TokenList tok_list = create_token_list();
 
@@ -286,6 +281,10 @@ TokenList lexer_get_tokens(char* source) {
         extend_token_list(&token_list, tokenize_line(line));
 
         line = strtok(NULL, "\n");
+    }
+
+    if(GLOBAL_DEBUG_MODE) {
+        lexer_print_tokens(token_list);
     }
 
     return token_list;

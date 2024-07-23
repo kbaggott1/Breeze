@@ -1,0 +1,1 @@
+int GLOBAL_DEBUG_MODE; //!extern
