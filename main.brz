@@ -1,0 +1,2 @@
+my_num: int = 10 - 5.3 # testing comment removal
+const some_text = "test"
