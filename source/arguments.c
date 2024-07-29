@@ -7,7 +7,9 @@ typedef struct { //!expose
     char source_path[FS_PATH_BUFFER];
     char output_path[FS_PATH_BUFFER];
     int debug;
-} Arguments;
+} Arguments; // TODO if this was a hashmap instead of a struct it would make more sense
+
+void print_arguments(Arguments* args_to_print);
 
 void* get_member(Arguments* args, char* member_name) {
     if(strcmp("source_path", member_name) == 0) {
@@ -35,22 +37,34 @@ Arguments handle_args(int argc, char** argv) { //!expose
     for(int i = 1; i < argc; i++) {
         char* is_member = strstr(argv[i], MEMBER_PREFIX);
 
-        if(is_member) {
+        if(is_member) { // key (starts with --)
             char* member_name = &argv[i][PREFIX_LENGTH];
             args_member = get_member(&args, member_name);
 
             if(args_member == NULL) {
-                printf("AHHH EXPLODE");
+                printf("Unknown argument: %s\n", argv[i]);
             }
         }
-        else {
-            strncpy(args_member, argv[i], FS_PATH_BUFFER);
+        else { // value
+            if(args_member) {
+                strncpy(args_member, argv[i], FS_PATH_BUFFER);
+                args_member = NULL;                
+            }
+            else {
+                printf("Unknown argument: %s\n", argv[i]);
+            }
         }
     }
 
+    print_arguments(&args);
     return args;
 }
 
 void print_arguments(Arguments* args_to_print) {
-    //TODO print key value pairs for arguments
+    if (!args_to_print->debug) {
+        return;
+    }
+    printf("source_path: %s\n", args_to_print->source_path);
+    printf("output_path: %s\n", args_to_print->output_path);
+    printf("debug: %d\n", args_to_print->debug);
 }

@@ -1,4 +1,6 @@
 #ifndef GLOBALS_H
 #define GLOBALS_H
-extern int GLOBAL_DEBUG_MODE; 
+#include "arguments.h" 
+
+extern Arguments GLOBAL_ARGS; 
 #endif

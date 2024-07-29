@@ -283,7 +283,7 @@ TokenList lexer_get_tokens(char* source) {
         line = strtok(NULL, "\n");
     }
 
-    if(GLOBAL_DEBUG_MODE) {
+    if(GLOBAL_ARGS.debug) {
         lexer_print_tokens(token_list);
     }
 

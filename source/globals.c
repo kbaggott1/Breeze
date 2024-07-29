@@ -1,1 +1,3 @@
-int GLOBAL_DEBUG_MODE; //!extern
+#include "arguments.h" //!expose
+
+Arguments GLOBAL_ARGS; //!extern
